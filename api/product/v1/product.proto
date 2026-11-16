@@ -2,4 +2,24 @@ syntax="proto3";
 
 package product;
 
-option go_package = ""
+option go_package = "shop/api/product/v1;productv1";
+
+message Product {
+    int64 id = 1;
+    string name = 2;
+    int64 price = 3;
+}
+
+message GetProductRequest {
+    int64 id = 1;
+}
+
+message GetProductResponse {
+    Product product = 1;
+}
+
+
+service ProductService {
+    rpc GetProduct (GetProductRequest) returns (GetProductResponse);
+}
+
