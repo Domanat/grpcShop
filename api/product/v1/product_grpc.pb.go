@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProductService_GetProduct_FullMethodName = "/product.ProductService/GetProduct"
+	ProductService_GetProduct_FullMethodName   = "/product.ProductService/GetProduct"
+	ProductService_ListProducts_FullMethodName = "/product.ProductService/ListProducts"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductServiceClient interface {
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error)
+	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Product], error)
 }
 
 type productServiceClient struct {
@@ -47,11 +49,31 @@ func (c *productServiceClient) GetProduct(ctx context.Context, in *GetProductReq
 	return out, nil
 }
 
+func (c *productServiceClient) ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Product], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ProductService_ServiceDesc.Streams[0], ProductService_ListProducts_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ListProductsRequest, Product]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ProductService_ListProductsClient = grpc.ServerStreamingClient[Product]
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations must embed UnimplementedProductServiceServer
 // for forward compatibility.
 type ProductServiceServer interface {
 	GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error)
+	ListProducts(*ListProductsRequest, grpc.ServerStreamingServer[Product]) error
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -64,6 +86,9 @@ type UnimplementedProductServiceServer struct{}
 
 func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProduct not implemented")
+}
+func (UnimplementedProductServiceServer) ListProducts(*ListProductsRequest, grpc.ServerStreamingServer[Product]) error {
+	return status.Error(codes.Unimplemented, "method ListProducts not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 func (UnimplementedProductServiceServer) testEmbeddedByValue()                        {}
@@ -104,6 +129,17 @@ func _ProductService_GetProduct_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_ListProducts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListProductsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ProductServiceServer).ListProducts(m, &grpc.GenericServerStream[ListProductsRequest, Product]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ProductService_ListProductsServer = grpc.ServerStreamingServer[Product]
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +152,12 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_GetProduct_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ListProducts",
+			Handler:       _ProductService_ListProducts_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "api/product/v1/product.proto",
 }
