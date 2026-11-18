@@ -19,7 +19,6 @@ message GetProductResponse {
 }
 
 message ListProductsRequest {
-    int64 startId = 1;
 }
 
 

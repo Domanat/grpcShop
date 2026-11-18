@@ -171,7 +171,6 @@ func (x *GetProductResponse) GetProduct() *Product {
 
 type ListProductsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	StartId       int64                  `protobuf:"varint,1,opt,name=startId,proto3" json:"startId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -206,13 +205,6 @@ func (*ListProductsRequest) Descriptor() ([]byte, []int) {
 	return file_api_product_v1_product_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListProductsRequest) GetStartId() int64 {
-	if x != nil {
-		return x.StartId
-	}
-	return 0
-}
-
 var File_api_product_v1_product_proto protoreflect.FileDescriptor
 
 const file_api_product_v1_product_proto_rawDesc = "" +
@@ -225,9 +217,8 @@ const file_api_product_v1_product_proto_rawDesc = "" +
 	"\x11GetProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"@\n" +
 	"\x12GetProductResponse\x12*\n" +
-	"\aproduct\x18\x01 \x01(\v2\x10.product.ProductR\aproduct\"/\n" +
-	"\x13ListProductsRequest\x12\x18\n" +
-	"\astartId\x18\x01 \x01(\x03R\astartId2\x99\x01\n" +
+	"\aproduct\x18\x01 \x01(\v2\x10.product.ProductR\aproduct\"\x15\n" +
+	"\x13ListProductsRequest2\x99\x01\n" +
 	"\x0eProductService\x12E\n" +
 	"\n" +
 	"GetProduct\x12\x1a.product.GetProductRequest\x1a\x1b.product.GetProductResponse\x12@\n" +

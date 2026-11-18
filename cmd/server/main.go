@@ -18,7 +18,11 @@ func main() {
 	myServ := server.Server{}
 	myServ.Init()
 
-	grpcServ := grpc.NewServer()
+	grpcServ := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		server.LoggingInterceptor,
+		server.ValidatorInterceptor,
+	))
+
 	productv1.RegisterProductServiceServer(grpcServ, &myServ)
 
 	log.Printf("Server started on 50051")

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 	productv1 "shop/api/product/v1"
 	"time"
 
@@ -27,6 +28,7 @@ func (s *Server) Init() {
 }
 
 func (s *Server) GetProduct(ctx context.Context, inReq *productv1.GetProductRequest) (*productv1.GetProductResponse, error) {
+	log.Println("Inside get product")
 	val, ok := s.products[inReq.Id]
 	if ok {
 		return &productv1.GetProductResponse{Product: val}, nil
@@ -35,15 +37,40 @@ func (s *Server) GetProduct(ctx context.Context, inReq *productv1.GetProductRequ
 	}
 }
 
+func LoggingInterceptor(
+	ctx context.Context,
+	req any,
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp any, err error) {
+	log.Printf("Logging user\n")
+	resp, err = handler(ctx, req)
+
+	log.Printf("After handler\n")
+	return resp, err
+}
+
+func ValidatorInterceptor(
+	ctx context.Context,
+	req any,
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (any, error) {
+	log.Println("Do some validation")
+
+	resp, err := handler(ctx, req)
+	log.Println("After validation")
+	return resp, err
+}
+
 func (s *Server) ListProducts(in *productv1.ListProductsRequest, stream grpc.ServerStreamingServer[productv1.Product]) error {
-	for i := int(in.StartId); i < len(s.products); i++ {
+	for _, val := range s.products {
 		if stream.Context().Err() != nil {
 			return stream.Context().Err()
 		}
 		time.Sleep(1 * time.Second)
-		p := s.products[int64(i)]
 
-		if err := stream.Send(p); err != nil {
+		if err := stream.Send(val); err != nil {
 			return err
 		}
 	}
