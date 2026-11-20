@@ -7,6 +7,7 @@ import (
 	"shop/internal/server"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -22,8 +23,9 @@ func main() {
 		server.LoggingInterceptor,
 		server.ValidatorInterceptor,
 	))
-
 	productv1.RegisterProductServiceServer(grpcServ, &myServ)
+
+	reflection.Register(grpcServ)
 
 	log.Printf("Server started on 50051")
 

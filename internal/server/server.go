@@ -58,6 +58,16 @@ func ValidatorInterceptor(
 ) (any, error) {
 	log.Println("Do some validation")
 
+	switch r := req.(type) {
+	case *productv1.GetProductRequest:
+		if r.Id <= 0 {
+			return nil, status.Error(
+				codes.InvalidArgument,
+				"Product id must be positive",
+			)
+		}
+	}
+
 	resp, err := handler(ctx, req)
 	log.Println("After validation")
 	return resp, err
