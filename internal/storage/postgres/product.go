@@ -2,14 +2,16 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 
 	"shop/internal/model"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrProductNotFound = errors.New("product not found")
 
 type ProductRepository struct {
 	pool *pgxpool.Pool
@@ -24,7 +26,7 @@ func (p *ProductRepository) Create(ctx context.Context, name string, price int64
 
 	var newId int64
 
-	err := p.pool.QueryRow(ctx, query, name, price).Scan(newId)
+	err := p.pool.QueryRow(ctx, query, name, price).Scan(&newId)
 	if err != nil {
 		return -1, fmt.Errorf("Error inserting into database %w\n", err)
 	}
@@ -39,15 +41,20 @@ func (p *ProductRepository) GetById(ctx context.Context, id int64) (model.Produc
 		ctx,
 		`SELECT * from products WHERE id = $1`,
 		id,
-	).Scan(product)
+	).Scan(&product.ID, &product.Name, &product.Price)
 
-	log.Println(product)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Product{}, fmt.Errorf("Get product: %d: %w", id, ErrProductNotFound)
+		}
+		return model.Product{}, fmt.Errorf("Get product: %d: %w", id, err)
+	}
 
-	return product, err
+	return product, nil
 }
 
 func (p *ProductRepository) GetList(ctx context.Context, limit int) ([]model.Product, error) {
-	query := `SELECT id, name, price FROM products ORDER BY id ASC LIMIT $1`
+	query := `SELECT id, name, price FROM products ORDER BY id LIMIT $1`
 
 	rows, err := p.pool.Query(ctx, query, limit)
 	if err != nil {

@@ -1,14 +1,21 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	productv1 "shop/api/product/v1"
 	"shop/internal/server"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+// Transfer for transaction
+func transfer(ctx context.Context, pool *pgxpool.Pool) error {
+
+}
 
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
