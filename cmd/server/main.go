@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"shop/internal/repository"
+	db "shop/internal/repository/postgres/sqlc"
 	"shop/internal/storage/postgres"
 	"time"
 )
@@ -38,8 +39,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer pool.Close()
 
-	accRep := repository.NewAccountRepository(pool)
+	queries := db.New(pool)
+
+	id, err := queries.CreateProduct(ctx, db.CreateProductParams{
+		Name:  "Baobab",
+		Price: 9999,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	product, err := queries.GetProduct(ctx, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(product)
 
 }
